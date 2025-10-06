@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sigma Classes</title>
+
+<!-- Fonts & Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --accent1:#8b5cf6;
+  --accent2:#06b6d4;
+  --accent3:#ff8c00;
+  --text:#eaf2ff;
+  --card-bg:rgba(255,255,255,0.08);
+  --card-border:rgba(255,255,255,0.15);
+  --body-bg-overlay: rgba(0,0,0,0.25);
+}
+
+body.dark {
+  --accent1:#ff6ec7;
+  --accent2:#2575fc;
+  --accent3:#6a11cb;
+  --text:#f0f0f0;
+  --card-bg: rgba(0,0,0,0.6);
+  --card-border: rgba(255,255,255,0.1);
+  --body-bg-overlay: rgba(0,0,0,0.6);
+}
+
+* { box-sizing:border-box; margin:0; padding:0; font-family:"Inter",sans-serif; }
+
+/* Background */
+.bg-wrapper { position: fixed; top:0; left:0; width:100%; height:200%; z-index:-2; overflow:hidden; }
+.bg-wrapper img { position:absolute; width:100%; height:100%; object-fit:cover; animation: moveZoom 120s linear infinite; filter: brightness(1.1); }
+@keyframes moveZoom { 0% { transform:translateY(0) scale(1); } 50% { transform:translateY(-50%) scale(1.05); } 100% { transform:translateY(0) scale(1); } }
+
+body::before { content:""; position:fixed; inset:0; background: var(--body-bg-overlay); z-index:-1; }
+
+body { color:var(--text); overflow-x:hidden; }
+
+.fade-in { animation: fadeIn 1s ease-in forwards; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+.container { max-width:800px; margin:0 auto; padding:20px; display:flex; flex-direction:column; align-items:center; gap:20px; min-height:100vh; justify-content:center; }
+
+h1 { font-family:"Playfair Display",serif; font-size:40px; text-align:center; background: linear-gradient(90deg,var(--accent1),var(--accent2),var(--accent3)); -webkit-background-clip:text; color:transparent; letter-spacing:1px; text-shadow:0 0 20px rgba(255,255,255,0.1); }
+
+.card { width:100%; max-width:420px; padding:24px; border-radius:20px; background:var(--card-bg); border:1px solid var(--card-border); text-align:center; backdrop-filter: blur(20px); box-shadow: 0 4px 25px rgba(0,0,0,0.4); transition: all 0.3s ease; }
+.card:hover { transform:translateY(-6px); border-color: var(--accent1); box-shadow:0 0 25px rgba(139,92,246,0.6); }
+
+/* Buttons */
+button { padding:14px 22px; border:none; border-radius:14px; cursor:pointer; color:white; font-weight:700; font-size:16px; margin-top:12px; transition: all 0.3s ease; width:100%; background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3)); box-shadow: 0 0 15px rgba(106,17,203,0.6), 0 0 25px rgba(37,117,252,0.4); }
+button:hover { transform:scale(1.05); box-shadow: 0 0 25px rgba(106,17,203,0.8), 0 0 35px rgba(37,117,252,0.6), 0 0 20px rgba(255,110,199,0.5); }
+
+.science { background: linear-gradient(135deg, var(--accent1), var(--accent2)); }
+.sst { background: linear-gradient(135deg, var(--accent3), var(--accent2)); }
+.pay { background: linear-gradient(135deg, var(--accent1), var(--accent3)); }
+.wa { background: linear-gradient(135deg,#25D366,#128C7E); color:#06221a; }
+.login-btn { background: linear-gradient(135deg, var(--accent1), var(--accent2), var(--accent3)); }
+
+#loginSection, #dashboardSection, #testSection { display:none; }
+
+input { width:100%; padding:14px; margin:14px 0; border-radius:12px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.07); color:white; font-size:16px; transition:0.3s; }
+input:focus { border-color: var(--accent1); box-shadow:0 0 12px var(--accent1); outline:none; }
+
+.password-container { position: relative; width:100%; }
+.password-container input { width:100%; padding-right:45px; }
+.toggle-password { position:absolute; right:14px; top:50%; transform:translateY(-50%); cursor:pointer; font-size:20px; color:rgba(255,255,255,0.7); transition:0.2s; }
+.toggle-password:hover { color: var(--accent1); }
+
+/* Dark Mode Button */
+#darkModeBtn { position: fixed; top: 20px; right: 20px; padding: 10px 20px; border-radius: 30px; background: linear-gradient(135deg,#6a11cb,#2575fc,#ff6ec7); color:white; font-weight:600; font-size:16px; border:none; cursor:pointer; box-shadow:0 4px 15px rgba(106,17,203,0.6),0 0 25px rgba(37,117,252,0.4); z-index:1000; transition: all 0.3s ease; }
+#darkModeBtn:hover { transform: scale(1.05); box-shadow:0 6px 25px rgba(106,17,203,0.8),0 0 35px rgba(37,117,252,0.6),0 0 20px rgba(255,110,199,0.5); }
+</style>
+</head>
+<body>
+
+<!-- Dark Mode Toggle -->
+<button id="darkModeBtn" onclick="toggleDarkMode()">Dark Mode</button>
+
+<!-- Background -->
+<div class="bg-wrapper">
+  <img src="https://lh3.googleusercontent.com/d/1d_8mwfTzp0dQMsZToMFCCvZaxPb3ChZk" alt="Background">
+</div>
+
+<!-- Login Section -->
+<div class="container fade-in" id="loginSection">
+  <h1>Sigma Classes Login</h1>
+  <div class="password-container">
+    <input type="password" id="password" placeholder="Enter Password">
+    <i class="fa-solid fa-eye toggle-password" id="togglePassword" onclick="togglePassword()"></i>
+  </div>
+  <button class="login-btn" onclick="checkPassword();">Login</button>
+</div>
+
+<!-- Dashboard Section -->
+<div class="container" id="dashboardSection">
+  <h1>Welcome to Sigma Classes</h1>
+  <div class="card"><button class="science" onclick="openFolder('science')">Science Notes</button></div>
+  <div class="card"><button class="sst" onclick="openFolder('sst')">SST Notes</button></div>
+  <div class="card"><button class="wa" onclick="openLink('https://wa.me/918619201068')">Message on WhatsApp</button></div>
+  <div class="card"><button class="science" onclick="openPaidFeature()">🧠 Take Test</button></div>
+  <div class="card"><button class="pay" onclick="payFee();">Pay Fee</button></div>
+</div>
+
+<script>
+const SECRET="sig5201ma#*";
+const loginSection=document.getElementById("loginSection");
+const dashboardSection=document.getElementById("dashboardSection");
+
+/* Password toggle */
+function togglePassword(){
+  const pw=document.getElementById("password");
+  const icon=document.getElementById("togglePassword");
+  if(pw.type==="password"){ pw.type="text"; icon.classList.replace("fa-eye","fa-eye-slash"); }
+  else{ pw.type="password"; icon.classList.replace("fa-eye-slash","fa-eye"); }
+}
+
+/* Section navigation */
+function showSection(id){
+  loginSection.style.display="none";
+  dashboardSection.style.display="none";
+  document.getElementById(id).style.display="flex";
+}
+
+/* Check password */
+function checkPassword(){
+  const pw=document.getElementById("password").value.trim();
+  if(pw===SECRET) showSection("dashboardSection");
+  else alert("Incorrect Password!");
+}
+
+/* Open folder or link */
+function openLink(url){ window.open(url,"_blank"); }
+function openFolder(subject){
+  let url="";
+  if(subject==='science') url='https://drive.google.com/drive/folders/17QesAKiEEEAvF1iB9znW_dVkRizfD-uk';
+  if(subject==='sst') url='https://drive.google.com/drive/folders/1mDanBdclcf15LQ5AiH02LXMYFRLHc-qH';
+  window.open(url,"_blank");
+}
+
+/* Pay Fee */
+function payFee(){
+  window.open("https://paytm.me/918619201068?amount=500","_blank");
+}
+
+/* Paid Feature (Take Test) */
+function openPaidFeature() {
+  const newWindow = window.open("", "_blank");
+  newWindow.document.write(`
+    <html>
+    <head>
+      <title>Buy Access</title>
+      <style>
+        body {
+          font-family: 'Inter', sans-serif;
+          background: linear-gradient(135deg, #6a11cb, #2575fc);
+          color: white;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          text-align: center;
+        }
+        h1 { font-size: 28px; margin-bottom: 10px; }
+        p { font-size: 18px; margin-bottom: 30px; }
+        button {
+          background: linear-gradient(135deg,#ff6ec7,#6a11cb,#2575fc);
+          color: white;
+          border: none;
+          border-radius: 12px;
+          padding: 14px 24px;
+          font-size: 18px;
+          cursor: pointer;
+          transition: 0.3s;
+          box-shadow: 0 0 20px rgba(255,110,199,0.6);
+        }
+        button:hover {
+          transform: scale(1.05);
+          box-shadow: 0 0 30px rgba(255,110,199,0.8);
+        }
+      </style>
+    </head>
+    <body>
+      <h1>This feature is not available for free</h1>
+      <p>Buy it just for ₹50 to unlock the test section</p>
+      <button onclick="window.open('https://paytm.me/9664134632?amount=50','_blank')">Buy for ₹50</button>
+    </body>
+    </html>
+  `);
+}
+
+/* Dark Mode Toggle */
+function toggleDarkMode(){
+  document.body.classList.toggle("dark");
+  const btn=document.getElementById("darkModeBtn");
+  btn.textContent=document.body.classList.contains("dark") ? "Light Mode" : "Dark Mode";
+}
+
+/* Init */
+window.onload=function(){ loginSection.style.display='flex'; };
+</script>
+
+</body>
+</html>
