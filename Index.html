@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Scratch Card — Amplifier Bro</title>
+  <style>
+    /* CSS Variables for Neon Glow */
+    :root {
+      --neon-color: #0ff;
+      --win-color: #22c55e;
+      --popup-bg: #0f172a;
+    }
+    body {
+      font-family: 'Inter', system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a, #071024);
+      color: #e6eef8;
+      overflow: hidden;
+      transition: background 0.5s;
+    }
+    .main-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    .card {
+      /* Scratch Card Container */
+      width: 90vw;
+      max-width: 400px;
+      min-height: 550px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 25px;
+      padding: 30px 20px;
+      box-shadow: 0 15px 50px rgba(2, 6, 23, 0.9);
+      text-align: center;
+      position: relative;
+      /* Initially visible, but hidden if final screen is needed */
+      display: block; 
+    }
+    h1 {
+      margin: 0 0 30px;
+      font-size: 24px;
+      color: var(--neon-color);
+      text-shadow: 0 0 10px var(--neon-color), 0 0 20px var(--neon-color);
+    }
+    .scratch-area {
+      position: relative;
+      width: 90%;
+      height: 250px;
+      margin: 0 auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 5px 30px rgba(0, 0, 0, 0.5);
+      border: 4px solid var(--neon-color);
+      box-shadow: 0 0 15px var(--neon-color);
+    }
+    
+    .result-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(45deg, #053b1b, #007a3c);
+      color: #fff;
+      z-index: 1;
+    }
+    #multiplierDisplay {
+        font-size: 60px;
+        font-weight: 900;
+        color: #fff;
+        text-shadow: 0 0 5px rgba(0,0,0,0.5);
+    }
+    #scratchCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      touch-action: none; 
+    }
+    .instructions {
+        margin-top: 25px;
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    .calculate-btn {
+        margin-top: 30px;
+        background: linear-gradient(180deg, #06b6d4, #0891b2);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 10px;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 16px;
+        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+        transition: opacity 0.3s;
+        opacity: 0; 
+    }
+    .calculate-btn.show {
+        opacity: 1;
+    }
+
+    /* --- Calculation Popup Styles (Reused for Final Screen) --- */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s;
+      z-index: 10;
+    }
+    .popup-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .popup-box {
+      background: var(--popup-bg);
+      border: 4px solid var(--neon-color);
+      padding: 40px 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 40px var(--neon-color), 0 0 20px var(--neon-color) inset;
+      color: #fff;
+      text-align: center;
+      max-width: 350px;
+      width: 90%;
+      animation: popupScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+    }
+    @keyframes popupScale {
+      0% { transform: scale(0.6); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Final Locked Screen (Reuses popup styles but is main content) */
+    #finalScreen {
+        display: none; /* Hidden initially */
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100vh;
+    }
+    .final-message-box {
+        background: var(--popup-bg);
+        border: 4px solid var(--win-color); /* Winning color border */
+        padding: 40px 30px;
+        border-radius: 20px;
+        box-shadow: 0 0 40px var(--win-color);
+        color: #fff;
+        text-align: center;
+        max-width: 350px;
+        width: 90%;
+    }
+    .final-message-box h2 {
+        color: var(--win-color);
+        margin-bottom: 20px;
+    }
+    .final-code-label {
+        font-size: 18px;
+        margin-top: 0px;
+        color: rgba(255, 255, 255, 0.8);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    #savedUniqueCode {
+        font-size: 24px;
+        font-weight: 900;
+        color: var(--win-color);
+        text-shadow: 0 0 8px var(--win-color), 0 0 15px var(--win-color);
+        padding: 10px 0;
+        margin-bottom: 20px;
+        word-break: break-all;
+    }
+    #savedWinnings {
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
+    .copy-btn {
+        background: linear-gradient(180deg, #f97316, #ea580c);
+        border: none;
+        padding: 10px 25px;
+        border-radius: 10px;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 16px;
+        transition: background 0.2s;
+        margin-top: 5px;
+    }
+    .copy-btn:disabled {
+        background: #4b5563;
+        cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+
+    <div id="scratchCardInterface" class="card">
+      <h1>Amplifier bro scratch karo jitne aye utne tumhare 💰👍</h1>
+      <div class="scratch-area">
+        <div id="resultLayer" class="result-layer">
+          <div id="multiplierDisplay"></div>
+        </div>
+        <canvas id="scratchCanvas"></canvas>
+      </div>
+      <p class="instructions">Use your mouse or finger to reveal your multiplier.</p>
+      <button id="calculateButton" class="calculate-btn">CALCULATE KARO 🔥</button>
+    </div>
+
+    <div id="finalScreen">
+        <div class="final-message-box">
+            <h2>CODE ALREADY CLAIMED!</h2>
+            <p style="color: #94a3b8; font-size: 14px;">Yeh scratch card sirf ek baar use ho sakta hai. Aapka code neeche diya gaya hai:</p>
+            
+            <div id="savedWinnings"></div>
+            <div class="final-code-label">TUMHARA UNIQUE CODE THA:</div>
+            <div id="savedUniqueCode"></div>
+            
+            <button id="copyFinalButton" class="copy-btn">COPY CODE AGAIN</button>
+        </div>
+    </div>
+  
+    <div id="calculationPopup" class="popup-overlay">
+      <div class="popup-box">
+          <span class="close-x" id="manualCloseButton">&times;</span>
+
+          <h2 style="color: var(--neon-color); margin-bottom: 15px;">CONGRATULATIONS!</h2>
+          <div id="calculationText"></div>
+          <div class="final-code-label">TUMHARA UNIQUE CODE HAI</div>
+          <div id="uniqueCodeDisplay"></div>
+          <button id="copyButton" class="copy-btn">COPY CODE</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const scratchCardInterface = document.getElementById('scratchCardInterface');
+    const finalScreen = document.getElementById('finalScreen');
+    const canvas = document.getElementById('scratchCanvas');
+    const ctx = canvas.getContext('2d');
+    const multiplierDisplay = document.getElementById('multiplierDisplay');
+    const calculateButton = document.getElementById('calculateButton');
+    const scratchArea = document.querySelector('.scratch-area');
+    const calculationPopup = document.getElementById('calculationPopup');
+    const calculationText = document.getElementById('calculationText');
+    const uniqueCodeDisplay = document.getElementById('uniqueCodeDisplay');
+    const copyButton = document.getElementById('copyButton'); 
+    const manualCloseButton = document.getElementById('manualCloseButton');
+    const savedUniqueCodeElement = document.getElementById('savedUniqueCode');
+    const savedWinningsElement = document.getElementById('savedWinnings');
+    const copyFinalButton = document.getElementById('copyFinalButton');
+
+
+    // --- Global Constants and State ---
+    const BASE_VALUE = 10; 
+    const LOCAL_STORAGE_KEY = 'amplifier_card_used';
+
+    let isScratching = false;
+    let hasScratched = false; 
+    const revealThreshold = 50; 
+
+    const multipliers = [1, 2, 3, 4, 5, 1, 2, 3, 1, 10];
+    let winningMultiplier = 0;
+    
+    const uniqueCodeMap = {
+        1: 'AMPL-X1-A1B2C',
+        2: 'AMPL-X2-F3G4H',
+        3: 'AMPL-X3-J5K6L',
+        4: 'AMPL-X4-M7N8P',
+        5: 'AMPL-X5-Q9R0S',
+        10: 'AMPL-X10-Z9Y8X'
+    };
+
+    // --- Core Logic ---
+
+    // Function to check Local Storage and show the final screen if used
+    function checkLocalStorage() {
+        const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (savedData) {
+            const data = JSON.parse(savedData);
+            
+            // Show the final screen
+            scratchCardInterface.style.display = 'none';
+            finalScreen.style.display = 'flex';
+            
+            // Populate the final screen data
+            savedWinningsElement.textContent = `Winnings: ${data.base} × ${data.multiplier} = ${data.winnings}`;
+            savedUniqueCodeElement.textContent = data.code;
+
+            // Stop further execution for the scratch card logic
+            return true; 
+        }
+        
+        // If not used, show the scratch card
+        scratchCardInterface.style.display = 'block';
+        finalScreen.style.display = 'none';
+        return false;
+    }
+
+    // Function to save data to Local Storage
+    function saveToLocalStorage(multiplier, code) {
+        const data = {
+            used: true,
+            multiplier: multiplier,
+            base: BASE_VALUE,
+            winnings: BASE_VALUE * multiplier,
+            code: code
+        };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    }
+
+
+    // --- Setup Functions ---
+
+    function setupCanvas() {
+        if (checkLocalStorage()) return; // Exit if card already used
+
+        winningMultiplier = multipliers[Math.floor(Math.random() * multipliers.length)];
+        
+        const rect = scratchArea.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        
+        ctx.fillStyle = '#a0a0a0';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#b5b5b5';
+        for (let i = 0; i < 800; i++) {
+            ctx.fillRect(Math.random() * canvas.width, Math.random() * canvas.height, 1, 1);
+        }
+        
+        multiplierDisplay.textContent = `×${winningMultiplier}`;
+
+        canvas.style.opacity = 1;
+        isScratching = false;
+        hasScratched = false;
+        calculateButton.classList.remove('show');
+        calculationPopup.classList.remove('show');
+        
+        copyButton.textContent = 'COPY CODE';
+        copyButton.disabled = false;
+    }
+
+    // --- Scratching Logic (Unchanged) ---
+    // (getScratchPosition, startScratch, scratch, endScratch functions remain the same)
+    function getScratchPosition(e) {
+        const rect = canvas.getBoundingClientRect();
+        if (e.touches && e.touches.length > 0) {
+            e = e.touches[0];
+        }
+        return {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+        };
+    }
+
+    function startScratch(e) {
+        if (hasScratched) return;
+        isScratching = true;
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = 40; 
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        const pos = getScratchPosition(e);
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+    }
+
+    function scratch(e) {
+        if (!isScratching) return;
+        e.preventDefault(); 
+        
+        const pos = getScratchPosition(e);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+        
+        if (Math.random() < 0.1) {
+             checkReveal();
+        }
+    }
+
+    function endScratch() {
+        isScratching = false;
+        checkReveal(); 
+    }
+    
+    function checkReveal() {
+        if (hasScratched) return;
+        
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let totalPixels = canvas.width * canvas.height;
+        let transparentPixels = 0;
+        
+        for (let i = 3; i < data.length; i += 4) {
+            if (data[i] === 0) { 
+                transparentPixels++;
+            }
+        }
+        
+        const revealedPercentage = (transparentPixels / totalPixels) * 100;
+
+        if (revealedPercentage > revealThreshold) {
+            hasScratched = true;
+            canvas.style.transition = 'opacity 0.5s ease-out';
+            canvas.style.opacity = 0;
+            calculateButton.classList.add('show');
+        }
+    }
+
+    // --- Code Popup Logic ---
+
+    function showUniqueCode() {
+        if (!hasScratched) return;
+
+        const finalWinnings = BASE_VALUE * winningMultiplier;
+        const uniqueCode = uniqueCodeMap[winningMultiplier];
+        
+        calculationText.textContent = `Tumne ${BASE_VALUE} × ${winningMultiplier} = ${finalWinnings} jita hai!`;
+        uniqueCodeDisplay.textContent = uniqueCode;
+
+        calculationPopup.classList.add('show');
+    }
+
+    // UPDATED: Copies code AND saves to Local Storage
+    function copyCode(buttonElement, codeToCopy) {
+        if (buttonElement.disabled) return;
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(codeToCopy).then(() => {
+                buttonElement.textContent = 'CODE COPIED! ✅';
+                buttonElement.disabled = true;
+                
+                // *** CRITICAL STEP: Save to Local Storage after successful copy ***
+                if (buttonElement.id === 'copyButton') {
+                    saveToLocalStorage(winningMultiplier, codeToCopy);
+                }
+            }).catch(err => {
+                console.error('Could not copy text: ', err);
+                buttonElement.textContent = 'Error: Cannot Copy';
+            });
+        } else {
+            // Fallback
+            const textArea = document.createElement("textarea");
+            textArea.value = codeToCopy;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                buttonElement.textContent = 'COPIED! (Fallback) ✅';
+                buttonElement.disabled = true;
+                if (buttonElement.id === 'copyButton') {
+                    saveToLocalStorage(winningMultiplier, codeToCopy);
+                }
+            } catch (err) {
+                buttonElement.textContent = 'Copy failed.';
+            }
+            document.body.removeChild(textArea);
+        }
+    }
+    
+    function closePopup() {
+        calculationPopup.classList.remove('show');
+    }
+
+    // --- Event Listeners ---
+    
+    canvas.addEventListener('mousedown', startScratch);
+    canvas.addEventListener('mousemove', scratch);
+    document.addEventListener('mouseup', endScratch);
+    canvas.addEventListener('touchstart', startScratch);
+    canvas.addEventListener('touchmove', scratch);
+    canvas.addEventListener('touchend', endScratch);
+
+    calculateButton.addEventListener('click', showUniqueCode);
+
+    // Primary action: Copy code only (In Popup)
+    copyButton.addEventListener('click', () => {
+        copyCode(copyButton, uniqueCodeDisplay.textContent);
+    }); 
+    
+    // Final screen copy button
+    copyFinalButton.addEventListener('click', () => {
+        copyCode(copyFinalButton, savedUniqueCodeElement.textContent);
+    });
+
+    manualCloseButton.addEventListener('click', closePopup);
+
+    // Initial check and setup
+    setupCanvas();
+
+    new ResizeObserver(setupCanvas).observe(scratchArea);
+
+  </script>
+</body>
+  </html>
